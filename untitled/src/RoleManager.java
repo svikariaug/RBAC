@@ -13,7 +13,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     @Override
-    public void add(Role role) {
+    public synchronized void add(Role role) {
         String key = role.getName().toUpperCase();
         if (rolesByName.containsKey(key)) {
             throw new IllegalArgumentException("Role with name " + role.getName() + " already exists");
@@ -23,7 +23,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     @Override
-    public boolean remove(Role role) {
+    public synchronized boolean remove(Role role) {
         if (assignmentManager != null && !assignmentManager.findByRole(role).isEmpty()) {
             throw new IllegalStateException("Cannot remove role " + role.getName() + " as it is assigned to users");
         }
@@ -48,7 +48,7 @@ public class RoleManager implements Repository<Role> {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         rolesById.clear();
         rolesByName.clear();
     }
@@ -60,6 +60,12 @@ public class RoleManager implements Repository<Role> {
 
     public List<Role> findByFilter(RoleFilter filter) {
         return rolesById.values().stream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
+    }
+
+    public List<Role> findByFilterParallel(RoleFilter filter) {
+        return rolesById.values().parallelStream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
     }
@@ -76,12 +82,12 @@ public class RoleManager implements Repository<Role> {
         return rolesByName.containsKey(name.trim().toUpperCase());
     }
 
-    public void addPermissionToRole(String roleName, Permission permission) {
+    public synchronized void addPermissionToRole(String roleName, Permission permission) {
         Role role = findByName(roleName).orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
         role.addPermission(permission);
     }
 
-    public void removePermissionFromRole(String roleName, Permission permission) {
+    public synchronized void removePermissionFromRole(String roleName, Permission permission) {
         Role role = findByName(roleName).orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName));
         role.removePermission(permission);
     }

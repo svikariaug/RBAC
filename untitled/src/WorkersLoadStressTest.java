@@ -25,7 +25,7 @@ class WorkersLoadStressTest {
 
     @BeforeEach
     void setUp() {
-        system = new RBACSystem();
+        system = new RBACSystem(0);
         system.initialize();
     }
 

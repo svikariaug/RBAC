@@ -11,7 +11,7 @@ class RBACSystemTest {
 
     @BeforeEach
     void setUp() {
-        system = new RBACSystem();
+        system = new RBACSystem(0);
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
     }
@@ -126,7 +126,7 @@ class RBACSystemTest {
     void testCreateSystemWithUserAfterInit() {
         system.initialize();
 
-        RBACSystem newSystem = new RBACSystem();
+        RBACSystem newSystem = new RBACSystem(0);
 
         system.getUserManager().findByUsername("admin").ifPresent(admin -> {
             newSystem.getUserManager().add(admin);

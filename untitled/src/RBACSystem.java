@@ -10,9 +10,14 @@ public class RBACSystem {
     private final AssignmentManager assignmentManager;
     private final AuditLog auditLog;
     private final BackgroundExecutor backgroundExecutor;
-    private final ScheduledMaintenanceTask scheduledMaintenance;
+    private final Object schedulerLock = new Object();
+    private volatile ScheduledMaintenanceTask scheduledMaintenance;
     private final AtomicBoolean asyncShutdown = new AtomicBoolean(false);
     private String currentUser;
+
+    public static int getDefaultSchedulerPeriodSeconds() {
+        return DEFAULT_SCHEDULER_PERIOD_SEC;
+    }
 
     public RBACSystem() {
         this(DEFAULT_SCHEDULER_PERIOD_SEC);
@@ -29,10 +34,12 @@ public class RBACSystem {
         this.auditLog = new AuditLog();
         this.backgroundExecutor = new BackgroundExecutor();
         this.currentUser = "system";
-        if (schedulerPeriodSeconds > 0) {
-            this.scheduledMaintenance = new ScheduledMaintenanceTask(this, schedulerPeriodSeconds, TimeUnit.SECONDS);
-        } else {
-            this.scheduledMaintenance = null;
+        synchronized (schedulerLock) {
+            if (schedulerPeriodSeconds > 0) {
+                this.scheduledMaintenance = new ScheduledMaintenanceTask(this, schedulerPeriodSeconds, TimeUnit.SECONDS);
+            } else {
+                this.scheduledMaintenance = null;
+            }
         }
     }
 
@@ -55,14 +62,40 @@ public class RBACSystem {
     }
 
     /**
+     * Период планировщика N секунд (0 — остановить расписание).
+     */
+    public void setSchedulerPeriodSeconds(int periodSeconds) {
+        synchronized (schedulerLock) {
+            if (scheduledMaintenance != null) {
+                scheduledMaintenance.shutdown();
+                scheduledMaintenance = null;
+            }
+            if (periodSeconds > 0) {
+                scheduledMaintenance = new ScheduledMaintenanceTask(this, periodSeconds, TimeUnit.SECONDS);
+            }
+        }
+    }
+
+    /** Полная очистка данных (перед загрузкой снимка). */
+    public void clearAllData() {
+        assignmentManager.clear();
+        roleManager.clear();
+        userManager.clear();
+        currentUser = "system";
+    }
+
+    /**
      * Завершение фоновых потоков (пул задач и обработчик audit log).
      */
     public void shutdownAsyncServices() {
         if (!asyncShutdown.compareAndSet(false, true)) {
             return;
         }
-        if (scheduledMaintenance != null) {
-            scheduledMaintenance.shutdown();
+        synchronized (schedulerLock) {
+            if (scheduledMaintenance != null) {
+                scheduledMaintenance.shutdown();
+                scheduledMaintenance = null;
+            }
         }
         backgroundExecutor.shutdown();
         auditLog.shutdownAndAwait(5, TimeUnit.SECONDS);

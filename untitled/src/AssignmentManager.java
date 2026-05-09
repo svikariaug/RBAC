@@ -13,7 +13,7 @@ public class AssignmentManager implements Repository<RoleAssignment> {
     }
 
     @Override
-    public void add(RoleAssignment assignment) {
+    public synchronized void add(RoleAssignment assignment) {
         if (userManager.findByUsername(assignment.user().username()).isEmpty()) {
             throw new IllegalArgumentException("User not found: " + assignment.user().username());
         }
@@ -23,11 +23,13 @@ public class AssignmentManager implements Repository<RoleAssignment> {
         if (userHasRole(assignment.user(), assignment.role())) {
             throw new IllegalArgumentException("User already has this role assigned");
         }
-        assignmentsById.put(assignment.assignmentId(), assignment);
+        if (assignmentsById.putIfAbsent(assignment.assignmentId(), assignment) != null) {
+            throw new IllegalArgumentException("Assignment id уже существует");
+        }
     }
 
     @Override
-    public boolean remove(RoleAssignment assignment) {
+    public synchronized boolean remove(RoleAssignment assignment) {
         return assignmentsById.remove(assignment.assignmentId()) != null;
     }
 
@@ -47,8 +49,14 @@ public class AssignmentManager implements Repository<RoleAssignment> {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         assignmentsById.clear();
+    }
+
+    public List<RoleAssignment> findByFilterParallel(AssignmentFilter filter) {
+        return assignmentsById.values().parallelStream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
     }
 
     public List<RoleAssignment> findByUser(User user) {

@@ -6,18 +6,17 @@ public class UserManager implements Repository<User> {
     private final Map<String, User> usersByUsername = new ConcurrentHashMap<>();
 
     @Override
-    public void add(User user) {
+    public synchronized void add(User user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
-        if (exists(user.username())) {
+        if (usersByUsername.putIfAbsent(user.username(), user) != null) {
             throw new IllegalArgumentException("User with username '" + user.username() + "' already exists");
         }
-        usersByUsername.put(user.username(), user);
     }
 
     @Override
-    public boolean remove(User user) {
+    public synchronized boolean remove(User user) {
         return usersByUsername.remove(user.username()) != null;
     }
 
@@ -37,7 +36,7 @@ public class UserManager implements Repository<User> {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         usersByUsername.clear();
     }
 
@@ -53,6 +52,12 @@ public class UserManager implements Repository<User> {
 
     public List<User> findByFilter(UserFilter filter) {
         return usersByUsername.values().stream()
+                .filter(filter::test)
+                .collect(Collectors.toList());
+    }
+
+    public List<User> findByFilterParallel(UserFilter filter) {
+        return usersByUsername.values().parallelStream()
                 .filter(filter::test)
                 .collect(Collectors.toList());
     }
@@ -74,7 +79,7 @@ public class UserManager implements Repository<User> {
         return usersByUsername.containsKey(username);
     }
 
-    public void update(String username, String newFullName, String newEmail) {
+    public synchronized void update(String username, String newFullName, String newEmail) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or blank");
         }

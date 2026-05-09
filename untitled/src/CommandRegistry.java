@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -165,7 +166,7 @@ public class CommandRegistry {
                     return;
             }
 
-            List<User> results = system.getUserManager().findByFilter(filter);
+            List<User> results = system.getUserManager().findByFilterParallel(filter);
             if (results.isEmpty()) {
                 System.out.println("Пользователи не найдены.");
             } else {
@@ -328,7 +329,7 @@ public class CommandRegistry {
                     return;
             }
 
-            List<Role> results = system.getRoleManager().findByFilter(filter);
+            List<Role> results = system.getRoleManager().findByFilterParallel(filter);
             if (results.isEmpty()) {
                 System.out.println("Роли не найдены.");
             } else {
@@ -603,7 +604,7 @@ public class CommandRegistry {
                     return;
             }
 
-            List<RoleAssignment> results = system.getAssignmentManager().findByFilter(filter);
+            List<RoleAssignment> results = system.getAssignmentManager().findByFilterParallel(filter);
             if (results.isEmpty()) {
                 System.out.println("Назначения не найдены.");
             } else {
@@ -685,6 +686,18 @@ public class CommandRegistry {
             System.out.println("Цикл планировщика выполнен; запись SCHEDULER_TICK добавлена в audit log.");
         });
 
+        parser.registerCommand("schedule-interval", "период планировщика: раз в N секунд (0 — выключить)", (scanner, system) -> {
+            int n = ConsoleUtils.promptInt(scanner,
+                    "N секунд между тиками (0 = планировщик выключен): ", 0, 86400);
+            system.setSchedulerPeriodSeconds(n);
+            if (n == 0) {
+                System.out.println("Периодический планировщик остановлен.");
+            } else {
+                System.out.println("Планировщик установлен: раз в " + n + " с.");
+            }
+            system.getAuditLog().log("SCHEDULE_INTERVAL", system.getCurrentUser(), Integer.toString(n), "set");
+        });
+
         parser.registerCommand("stats", "статистика системы", (scanner, system) -> {
             System.out.print(system.generateStatistics());
 
@@ -718,9 +731,9 @@ public class CommandRegistry {
             }
         });
 
-        parser.registerCommand("report-users", "отчёт по пользователям", (scanner, system) -> {
+        parser.registerCommand("report-users", "отчёт по пользователям (parallelStream)", (scanner, system) -> {
             ReportGenerator generator = new ReportGenerator();
-            String report = generator.generateUserReport(system.getUserManager(), system.getAssignmentManager());
+            String report = generator.generateUserReportParallel(system.getUserManager(), system.getAssignmentManager());
             System.out.println(report);
             if (ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл? (да/нет): ")) {
                 String filename = ConsoleUtils.promptString(scanner, "Имя файла: ", true);
@@ -739,7 +752,7 @@ public class CommandRegistry {
             final ReportGenerator generator = new ReportGenerator();
             system.getBackgroundExecutor().execute(() -> {
                 try {
-                    String report = generator.generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                    String report = generator.generateUserReportParallel(system.getUserManager(), system.getAssignmentManager());
                     if (filename != null && !filename.isBlank()) {
                         generator.exportToFile(report, filename);
                         System.out.println("\n[фон] Отчёт готов, файл: " + filename);
@@ -780,9 +793,9 @@ public class CommandRegistry {
             }
         });
 
-        parser.registerCommand("report-matrix", "матрица прав", (scanner, system) -> {
+        parser.registerCommand("report-matrix", "матрица прав (parallelStream)", (scanner, system) -> {
             ReportGenerator generator = new ReportGenerator();
-            String report = generator.generatePermissionMatrix(system.getUserManager(), system.getAssignmentManager());
+            String report = generator.generatePermissionMatrixParallel(system.getUserManager(), system.getAssignmentManager());
             System.out.println(report);
             if (ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл? (да/нет): ")) {
                 String filename = ConsoleUtils.promptString(scanner, "Имя файла: ", true);
@@ -805,11 +818,29 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("save", "сохранить данные в файл", (scanner, system) -> {
-            System.out.println("Сохранение данных... (функция в разработке)");
+            String filename = ConsoleUtils.promptString(scanner, "Имя файла: ", true);
+            try {
+                RbacSnapshotIO.exportToFile(system, filename);
+                System.out.println("Данные сохранены: " + filename);
+                system.getAuditLog().log("SAVE_SYNC", system.getCurrentUser(), filename, "ok");
+            } catch (IOException e) {
+                System.out.println("Ошибка сохранения: " + e.getMessage());
+                system.getAuditLog().log("SAVE_SYNC", system.getCurrentUser(), filename, "fail: " + e.getMessage());
+            }
         });
 
         parser.registerCommand("load", "загрузить данные из файла", (scanner, system) -> {
-            System.out.println("Загрузка данных... (функция в разработке)");
+            String filename = ConsoleUtils.promptString(scanner, "Имя файла: ", true);
+            try {
+                RbacSnapshotIO.importFromFile(system, filename);
+                system.setCurrentUser("system");
+                System.out.println("Данные загружены из " + filename);
+                system.getAuditLog().log("LOAD", system.getCurrentUser(), filename, "ok");
+            } catch (Exception e) {
+                System.out.println("Ошибка загрузки: " + e.getMessage());
+                system.getAuditLog().log("LOAD", system.getCurrentUser(), filename,
+                        "fail: " + (e.getMessage() != null ? e.getMessage() : "error"));
+            }
         });
     }
 

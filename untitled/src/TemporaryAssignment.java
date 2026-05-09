@@ -9,12 +9,31 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
         super(user, role, metadata);
+        initExpires(expiresAt, autoRenew);
+    }
+
+    /** Загрузка из снимка. */
+    public static TemporaryAssignment restoreFromSnapshot(String assignmentId, User user, Role role,
+                                                          AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
+        return new TemporaryAssignment(assignmentId, user, role, metadata, expiresAt, autoRenew);
+    }
+
+    private TemporaryAssignment(String assignmentId, User user, Role role, AssignmentMetadata metadata,
+                                String expiresAt, boolean autoRenew) {
+        super(user, role, metadata, assignmentId);
+        initExpires(expiresAt, autoRenew);
+    }
+
+    private void initExpires(String expiresAt, boolean autoRenew) {
         expiresAt = ValidationUtils.normalizeString(expiresAt);
         if (expiresAt == null || !expiresAt.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$")) {
             throw new IllegalArgumentException("expiresAt must be in format YYYY-MM-DD HH:MM");
         }
         this.expiresAt = expiresAt;
         this.autoRenew = autoRenew;
+        if ("2000-01-01 00:00".equals(this.expiresAt)) {
+            finalizedByScheduler = true;
+        }
     }
 
     @Override

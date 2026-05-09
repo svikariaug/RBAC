@@ -19,18 +19,7 @@ public class ReportGenerator {
 
         List<String[]> rows = new ArrayList<>();
         for (User u : users) {
-            List<String> roles = assignmentManager.findByUser(u).stream()
-                    .filter(RoleAssignment::isActive)
-                    .map(ra -> ra.role().getName())
-                    .distinct()
-                    .sorted()
-                    .toList();
-            rows.add(new String[]{
-                    u.username(),
-                    FormatUtils.truncate(u.fullName(), 30),
-                    FormatUtils.truncate(u.email(), 30),
-                    String.join(", ", roles)
-            });
+            rows.add(userReportRow(u, assignmentManager));
         }
 
         sb.append(FormatUtils.formatTable(
@@ -38,6 +27,47 @@ public class ReportGenerator {
                 rows
         ));
         return sb.toString();
+    }
+
+    /**
+     * Отчёт по пользователям с {@link java.util.Collection#parallelStream()} на списке пользователей.
+     */
+    public String generateUserReportParallel(UserManager userManager, AssignmentManager assignmentManager) {
+        List<User> users = userManager.findAll();
+        users.sort(Comparator.comparing(User::username));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(FormatUtils.formatHeader("Отчёт по пользователям"));
+        if (users.isEmpty()) {
+            sb.append("Нет пользователей.\n");
+            return sb.toString();
+        }
+
+        List<String[]> rows = users.parallelStream()
+                .map(u -> userReportRow(u, assignmentManager))
+                .collect(Collectors.toCollection(ArrayList::new));
+        rows.sort(Comparator.comparing(r -> r[0]));
+
+        sb.append(FormatUtils.formatTable(
+                new String[]{"Username", "Full Name", "Email", "Active roles"},
+                rows
+        ));
+        return sb.toString();
+    }
+
+    private static String[] userReportRow(User u, AssignmentManager assignmentManager) {
+        List<String> roles = assignmentManager.findByUser(u).stream()
+                .filter(RoleAssignment::isActive)
+                .map(ra -> ra.role().getName())
+                .distinct()
+                .sorted()
+                .toList();
+        return new String[]{
+                u.username(),
+                FormatUtils.truncate(u.fullName(), 30),
+                FormatUtils.truncate(u.email(), 30),
+                String.join(", ", roles)
+        };
     }
 
     public String generateRoleReport(RoleManager roleManager, AssignmentManager assignmentManager) {
@@ -106,21 +136,66 @@ public class ReportGenerator {
 
         List<String[]> rows = new ArrayList<>();
         for (User u : users) {
-            Set<String> userResources = assignmentManager.getUserPermissions(u).stream()
-                    .map(Permission::resource)
-                    .map(String::toLowerCase)
-                    .collect(Collectors.toSet());
-
-            String[] row = new String[headers.length];
-            row[0] = u.username();
-            for (int i = 0; i < resList.size(); i++) {
-                row[i + 1] = userResources.contains(resList.get(i)) ? "✓" : "";
-            }
-            rows.add(row);
+            rows.add(permissionMatrixRow(u, resList, assignmentManager, headers.length));
         }
 
         sb.append(FormatUtils.formatTable(headers, rows));
         return sb.toString();
+    }
+
+    /**
+     * Матрица прав: параллельная обработка строк по пользователям ({@code parallelStream}).
+     */
+    public String generatePermissionMatrixParallel(UserManager userManager, AssignmentManager assignmentManager) {
+        List<User> users = userManager.findAll();
+        users.sort(Comparator.comparing(User::username));
+
+        Set<String> resources = assignmentManager.findAll().stream()
+                .filter(RoleAssignment::isActive)
+                .flatMap(ra -> ra.role().getPermissions().stream())
+                .map(Permission::resource)
+                .map(String::toLowerCase)
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(FormatUtils.formatHeader("Матрица прав (пользователи × ресурсы)"));
+
+        if (users.isEmpty()) {
+            sb.append("Нет пользователей.\n");
+            return sb.toString();
+        }
+        if (resources.isEmpty()) {
+            sb.append("Нет ресурсов/прав для построения матрицы.\n");
+            return sb.toString();
+        }
+
+        List<String> resList = new ArrayList<>(resources);
+        String[] headers = new String[1 + resList.size()];
+        headers[0] = "Username";
+        for (int i = 0; i < resList.size(); i++) headers[i + 1] = resList.get(i);
+
+        List<String[]> rows = users.parallelStream()
+                .map(u -> permissionMatrixRow(u, resList, assignmentManager, headers.length))
+                .collect(Collectors.toCollection(ArrayList::new));
+        rows.sort(Comparator.comparing(r -> r[0]));
+
+        sb.append(FormatUtils.formatTable(headers, rows));
+        return sb.toString();
+    }
+
+    private static String[] permissionMatrixRow(User u, List<String> resList,
+                                                AssignmentManager assignmentManager, int rowLen) {
+        Set<String> userResources = assignmentManager.getUserPermissions(u).stream()
+                .map(Permission::resource)
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        String[] row = new String[rowLen];
+        row[0] = u.username();
+        for (int i = 0; i < resList.size(); i++) {
+            row[i + 1] = userResources.contains(resList.get(i)) ? "✓" : "";
+        }
+        return row;
     }
 
     public void exportToFile(String report, String filename) {
@@ -132,4 +207,3 @@ public class ReportGenerator {
         }
     }
 }
-

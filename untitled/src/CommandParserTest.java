@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -13,9 +14,16 @@ class CommandParserTest {
     @BeforeEach
     void setUp() {
         parser = new CommandParser();
-        system = new RBACSystem();
+        system = new RBACSystem(0);
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (system != null) {
+            system.shutdownAsyncServices();
+        }
     }
 
     @Test

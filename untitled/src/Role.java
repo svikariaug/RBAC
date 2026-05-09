@@ -10,11 +10,21 @@ public class Role {
     private final Set<Permission> permissions = new HashSet<>();
 
     public Role(String name, String description) {
-        this.id = "role_" + UUID.randomUUID().toString();
+        this("role_" + UUID.randomUUID().toString(), name, description);
+    }
+
+    /** Восстановление из файла-снимка с сохранением идентификатора. */
+    public static Role restoreFromSnapshot(String id, String name, String description) {
+        return new Role(id, name, description);
+    }
+
+    private Role(String id, String name, String description) {
+        ValidationUtils.requireNonEmpty(id, "Role id");
         name = ValidationUtils.normalizeString(name);
         description = ValidationUtils.normalizeString(description);
         ValidationUtils.requireNonEmpty(name, "Role name");
         ValidationUtils.requireNonEmpty(description, "Role description");
+        this.id = id.trim();
         this.name = name.toUpperCase();
         this.description = description;
     }

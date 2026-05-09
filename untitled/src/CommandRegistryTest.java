@@ -17,7 +17,7 @@ class CommandRegistryTest {
     @BeforeEach
     void setUp() {
         parser = new CommandParser();
-        system = new RBACSystem();
+        system = new RBACSystem(0);
         system.initialize();
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
@@ -138,27 +138,39 @@ class CommandRegistryTest {
     }
 
     @Test
-    @DisplayName("Команда save должна выводить сообщение о разработке")
-    void testSaveCommand() {
+    @DisplayName("Команда save сохраняет снимок")
+    void testSaveCommand() throws Exception {
         CommandRegistry.registerAllCommands(parser);
 
-        Scanner testScanner = new Scanner("");
+        java.nio.file.Path tmp = java.nio.file.Files.createTempFile("rbac-save-cmd", ".snap");
+        java.nio.file.Files.deleteIfExists(tmp);
+
+        Scanner testScanner = new Scanner(tmp.toAbsolutePath() + "\n");
         parser.executeCommand("save", testScanner, system);
 
+        assertTrue(java.nio.file.Files.exists(tmp));
+        assertTrue(java.nio.file.Files.size(tmp) > 0);
         String output = outContent.toString();
-        assertTrue(output.contains("Сохранение данных... (функция в разработке)"));
+        assertTrue(output.contains("Данные сохранены"));
+        java.nio.file.Files.deleteIfExists(tmp);
     }
 
     @Test
-    @DisplayName("Команда load должна выводить сообщение о разработке")
-    void testLoadCommand() {
+    @DisplayName("Команда load восстанавливает данные из снимка")
+    void testLoadCommand() throws Exception {
         CommandRegistry.registerAllCommands(parser);
+        java.nio.file.Path tmp = java.nio.file.Files.createTempFile("rbac-load-cmd", ".snap");
+        RbacSnapshotIO.exportToFile(system, tmp.toString());
 
-        Scanner testScanner = new Scanner("");
+        system.clearAllData();
+        assertEquals(0, system.getUserManager().count());
+
+        Scanner testScanner = new Scanner(tmp.toAbsolutePath() + "\n");
         parser.executeCommand("load", testScanner, system);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("Загрузка данных... (функция в разработке)"));
+        assertTrue(system.getUserManager().count() > 0);
+        assertTrue(outContent.toString().contains("Данные загружены"));
+        java.nio.file.Files.deleteIfExists(tmp);
     }
 
     @Test
