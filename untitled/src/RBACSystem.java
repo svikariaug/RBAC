@@ -1,10 +1,14 @@
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RBACSystem {
     private final UserManager userManager;
     private final RoleManager roleManager;
     private final AssignmentManager assignmentManager;
     private final AuditLog auditLog;
+    private final BackgroundExecutor backgroundExecutor;
+    private final AtomicBoolean asyncShutdown = new AtomicBoolean(false);
     private String currentUser;
 
     public RBACSystem() {
@@ -13,6 +17,7 @@ public class RBACSystem {
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
         this.roleManager.setAssignmentManager(this.assignmentManager);
         this.auditLog = new AuditLog();
+        this.backgroundExecutor = new BackgroundExecutor();
         this.currentUser = "system";
     }
 
@@ -25,6 +30,21 @@ public class RBACSystem {
     public RoleManager getRoleManager() { return roleManager; }
     public AssignmentManager getAssignmentManager() { return assignmentManager; }
     public AuditLog getAuditLog() { return auditLog; }
+
+    public BackgroundExecutor getBackgroundExecutor() {
+        return backgroundExecutor;
+    }
+
+    /**
+     * Завершение фоновых потоков (пул задач и обработчик audit log).
+     */
+    public void shutdownAsyncServices() {
+        if (!asyncShutdown.compareAndSet(false, true)) {
+            return;
+        }
+        backgroundExecutor.shutdown();
+        auditLog.shutdownAndAwait(5, TimeUnit.SECONDS);
+    }
 
     public void setCurrentUser(String username) {
         if (username == null || username.equals("system")) {

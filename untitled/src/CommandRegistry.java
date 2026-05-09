@@ -724,6 +724,46 @@ public class CommandRegistry {
             }
         });
 
+        parser.registerCommand("report-users-async", "отчёт по пользователям (фоновая генерация)", (scanner, system) -> {
+            boolean save = ConsoleUtils.promptYesNo(scanner, "Сохранить результат в файл по готовности? (да/нет): ");
+            final String filename = save ? ConsoleUtils.promptString(scanner, "Имя файла: ", true) : null;
+            System.out.println("Запущена фоновая генерация отчёта по пользователям…");
+            system.getAuditLog().log("REPORT_USERS_ASYNC", system.getCurrentUser(), "",
+                    filename != null && !filename.isBlank() ? "save:" + filename : "print");
+
+            final ReportGenerator generator = new ReportGenerator();
+            system.getBackgroundExecutor().execute(() -> {
+                try {
+                    String report = generator.generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                    if (filename != null && !filename.isBlank()) {
+                        generator.exportToFile(report, filename);
+                        System.out.println("\n[фон] Отчёт готов, файл: " + filename);
+                    } else {
+                        System.out.println("\n[фон] Отчёт по пользователям:\n" + report);
+                    }
+                } catch (Throwable t) {
+                    System.err.println("[фон] Ошибка отчёта: " + t.getMessage());
+                }
+            });
+        });
+
+        parser.registerCommand("save-async", "сохранение снимка данных в файл (фон)", (scanner, system) -> {
+            String filename = ConsoleUtils.promptString(scanner, "Имя файла: ", true);
+            System.out.println("Фоновое сохранение запущено: " + filename);
+            system.getAuditLog().log("SAVE_ASYNC", system.getCurrentUser(), filename, "scheduled");
+            system.getBackgroundExecutor().execute(() -> {
+                try {
+                    RbacSnapshotIO.exportToFile(system, filename);
+                    System.out.println("\n[фон] Снимок сохранён: " + filename);
+                    system.getAuditLog().log("SAVE_ASYNC", system.getCurrentUser(), filename, "done");
+                } catch (Exception e) {
+                    System.err.println("[фон] Ошибка сохранения: " + e.getMessage());
+                    system.getAuditLog().log("SAVE_ASYNC", system.getCurrentUser(), filename,
+                            "fail: " + (e.getMessage() != null ? e.getMessage() : "error"));
+                }
+            });
+        });
+
         parser.registerCommand("report-roles", "отчёт по ролям", (scanner, system) -> {
             ReportGenerator generator = new ReportGenerator();
             String report = generator.generateRoleReport(system.getRoleManager(), system.getAssignmentManager());
@@ -753,6 +793,7 @@ public class CommandRegistry {
 
         parser.registerCommand("exit", "выход из программы", (scanner, system) -> {
             if (ConsoleUtils.promptYesNo(scanner, "Выйти? (да/нет): ")) {
+                system.shutdownAsyncServices();
                 System.out.println("До свидания!");
                 System.exit(0);
             }

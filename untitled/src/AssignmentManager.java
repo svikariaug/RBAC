@@ -1,8 +1,9 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class AssignmentManager implements Repository<RoleAssignment> {
-    private final Map<String, RoleAssignment> assignmentsById = new HashMap<>();
+    private final Map<String, RoleAssignment> assignmentsById = new ConcurrentHashMap<>();
     private final UserManager userManager;
     private final RoleManager roleManager;
 

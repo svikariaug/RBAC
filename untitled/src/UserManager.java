@@ -1,8 +1,9 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class UserManager implements Repository<User> {
-    private final Map<String, User> usersByUsername = new HashMap<>();
+    private final Map<String, User> usersByUsername = new ConcurrentHashMap<>();
 
     @Override
     public void add(User user) {

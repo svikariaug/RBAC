@@ -1,8 +1,11 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 class CommandRegistryTest {
@@ -19,6 +22,13 @@ class CommandRegistryTest {
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
         scanner = new Scanner(System.in);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (system != null) {
+            system.shutdownAsyncServices();
+        }
     }
 
     @Test
@@ -173,5 +183,40 @@ class CommandRegistryTest {
 
         String output = outContent.toString();
         assertNotNull(output);
+    }
+
+    @Test
+    @DisplayName("save-async записывает снимок в файл")
+    void testSaveAsyncCreatesSnapshotFile() throws Exception {
+        CommandRegistry.registerAllCommands(parser);
+        Path tmp = Files.createTempFile("rbac-workers", ".snap");
+        Files.deleteIfExists(tmp);
+
+        Scanner testScanner = new Scanner(tmp.toAbsolutePath() + "\n");
+        parser.executeCommand("save-async", testScanner, system);
+
+        assertTrue(outContent.toString().contains("Фоновое сохранение"));
+
+        for (int i = 0; i < 120 && (!Files.exists(tmp) || Files.size(tmp) == 0); i++) {
+            Thread.sleep(25);
+        }
+        assertTrue(Files.exists(tmp));
+        assertTrue(Files.size(tmp) > 0);
+    }
+
+    @Test
+    @DisplayName("report-users-async выводит отчёт после фона")
+    void testReportUsersAsync() throws Exception {
+        CommandRegistry.registerAllCommands(parser);
+        Scanner testScanner = new Scanner("нет\n");
+        parser.executeCommand("report-users-async", testScanner, system);
+
+        assertTrue(outContent.toString().contains("фоновая генерация"));
+
+        for (int i = 0; i < 120 && !outContent.toString().contains("[фон]"); i++) {
+            Thread.sleep(25);
+        }
+        assertTrue(outContent.toString().contains("[фон]"));
+        assertTrue(outContent.toString().contains("Отчёт по пользователям"));
     }
 }

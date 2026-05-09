@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,13 @@ class RBACSystemTest {
         system = new RBACSystem();
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (system != null) {
+            system.shutdownAsyncServices();
+        }
     }
 
     @Test
@@ -126,5 +134,6 @@ class RBACSystemTest {
 
         newSystem.setCurrentUser("admin");
         assertEquals("admin", newSystem.getCurrentUser());
+        newSystem.shutdownAsyncServices();
     }
 }

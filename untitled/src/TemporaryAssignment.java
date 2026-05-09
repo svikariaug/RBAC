@@ -34,6 +34,14 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         this.expiresAt = newExpirationDate;
     }
 
+    public String getExpiresAt() {
+        return expiresAt;
+    }
+
+    public boolean isAutoRenew() {
+        return autoRenew;
+    }
+
     public boolean isExpired() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         String now = LocalDateTime.now().format(formatter);
