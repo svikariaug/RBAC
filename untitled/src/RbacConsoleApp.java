@@ -1,10 +1,6 @@
 import java.util.Scanner;
 
-/**
- * Интерактивная консольная утилита RBAC.
- * <p>
- * Запуск: {@code java Main [--tick N]} — период планировщика N секунд (0 = без фона).
- */
+
 public final class RbacConsoleApp {
 
     private RbacConsoleApp() {}
@@ -25,7 +21,7 @@ public final class RbacConsoleApp {
             try {
                 system.shutdownAsyncServices();
             } catch (Throwable ignored) {
-                // graceful best-effort
+                
             }
         }));
 

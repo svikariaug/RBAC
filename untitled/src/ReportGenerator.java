@@ -29,9 +29,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
-    /**
-     * Отчёт по пользователям с {@link java.util.Collection#parallelStream()} на списке пользователей.
-     */
+    
     public String generateUserReportParallel(UserManager userManager, AssignmentManager assignmentManager) {
         List<User> users = userManager.findAll();
         users.sort(Comparator.comparing(User::username));
@@ -143,9 +141,7 @@ public class ReportGenerator {
         return sb.toString();
     }
 
-    /**
-     * Матрица прав: параллельная обработка строк по пользователям ({@code parallelStream}).
-     */
+    
     public String generatePermissionMatrixParallel(UserManager userManager, AssignmentManager assignmentManager) {
         List<User> users = userManager.findAll();
         users.sort(Comparator.comparing(User::username));

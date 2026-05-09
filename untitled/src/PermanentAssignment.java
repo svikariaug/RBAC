@@ -5,7 +5,7 @@ public class PermanentAssignment extends AbstractRoleAssignment {
         super(user, role, metadata);
     }
 
-    /** Загрузка из снимка. */
+    
     public static PermanentAssignment restoreFromSnapshot(String assignmentId, User user, Role role,
                                                          AssignmentMetadata metadata, boolean revoked) {
         return new PermanentAssignment(assignmentId, user, role, metadata, revoked);

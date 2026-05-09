@@ -12,7 +12,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         initExpires(expiresAt, autoRenew);
     }
 
-    /** Загрузка из снимка. */
+    
     public static TemporaryAssignment restoreFromSnapshot(String assignmentId, User user, Role role,
                                                           AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
         return new TemporaryAssignment(assignmentId, user, role, metadata, expiresAt, autoRenew);
@@ -63,9 +63,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         return autoRenew;
     }
 
-    /**
-     * Планировщик: короткая критическая секция на объекте; однократно закрепляет истечение срока.
-     */
+    
     public synchronized boolean finalizeExpirationIfDue() {
         if (finalizedByScheduler) {
             return false;

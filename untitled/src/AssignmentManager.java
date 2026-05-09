@@ -115,7 +115,7 @@ public class AssignmentManager implements Repository<RoleAssignment> {
         if (assignment instanceof PermanentAssignment pa) {
             pa.revoke();
         } else if (assignment instanceof TemporaryAssignment ta) {
-            // Set to a past date to expire it
+            
             ta.extend("2000-01-01 00:00");
         }
     }
@@ -129,11 +129,7 @@ public class AssignmentManager implements Repository<RoleAssignment> {
         }
     }
 
-    /**
-     * Находит истёкшие временные назначения и маркирует их (короткие блокировки на объектных замках назначений).
-     *
-     * @return число записей, обработанных на этом проходе впервые
-     */
+    
     public int finalizeExpiredTemporaryAssignments() {
         int n = 0;
         for (RoleAssignment ra : findAll()) {

@@ -29,7 +29,7 @@ public class MultiThreadCalcSimulation {
             System.out.print(HIDE_CURSOR);
 
             for (int i = 0; i < threads; i++) {
-                // строки прогресса начнутся с 4-й строки (1-based)
+                
                 int row = progressRow(i);
                 moveCursor(row, 1);
                 System.out.print(formatLine(i + 1, 0, barLength, "running", null));
@@ -61,7 +61,7 @@ public class MultiThreadCalcSimulation {
         long tid = Thread.currentThread().threadId();
 
         for (int filled = 0; filled <= barLength; filled++) {
-            // имитируем «расчёт»
+            
             sleepRandom(MIN_STEP_DELAY_MS, MAX_STEP_DELAY_MS);
 
             synchronized (CONSOLE_LOCK) {
@@ -94,7 +94,7 @@ public class MultiThreadCalcSimulation {
             suffix = "";
         }
 
-        // Чтобы строка полностью перерисовывалась, добиваем пробелами до фиксированной ширины
+        
         String base = String.format("%-5d | %-19s | %s%s", number, tidStr, bar, suffix);
         return padRight(base, 70);
     }

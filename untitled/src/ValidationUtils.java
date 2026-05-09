@@ -19,9 +19,7 @@ public final class ValidationUtils {
         return EMAIL_PATTERN.matcher(email.trim()).matches();
     }
 
-    /**
-     * Accepts "YYYY-MM-DD" and also "YYYY-MM-DD HH:MM" / "YYYY-MM-DD HH:MM:SS".
-     */
+    
     public static boolean isValidDate(String date) {
         if (date == null) return false;
         String d = date.trim();

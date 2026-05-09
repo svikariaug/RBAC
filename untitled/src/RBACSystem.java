@@ -23,9 +23,7 @@ public class RBACSystem {
         this(DEFAULT_SCHEDULER_PERIOD_SEC);
     }
 
-    /**
-     * @param schedulerPeriodSeconds период тика планировщика в секундах; {@code 0} — без фонового расписания (например, для тестов)
-     */
+    
     public RBACSystem(int schedulerPeriodSeconds) {
         this.userManager = new UserManager();
         this.roleManager = new RoleManager();
@@ -61,9 +59,7 @@ public class RBACSystem {
         return scheduledMaintenance;
     }
 
-    /**
-     * Период планировщика N секунд (0 — остановить расписание).
-     */
+    
     public void setSchedulerPeriodSeconds(int periodSeconds) {
         synchronized (schedulerLock) {
             if (scheduledMaintenance != null) {
@@ -76,7 +72,7 @@ public class RBACSystem {
         }
     }
 
-    /** Полная очистка данных (перед загрузкой снимка). */
+    
     public void clearAllData() {
         assignmentManager.clear();
         roleManager.clear();
@@ -84,9 +80,7 @@ public class RBACSystem {
         currentUser = "system";
     }
 
-    /**
-     * Завершение фоновых потоков (пул задач и обработчик audit log).
-     */
+    
     public void shutdownAsyncServices() {
         if (!asyncShutdown.compareAndSet(false, true)) {
             return;
@@ -154,7 +148,7 @@ public class RBACSystem {
             User user2 = User.create("jane_smith", "Jane Smith", "jane@example.com");
             userManager.add(user2);
 
-            // Назначаем роли
+            
             AssignmentMetadata meta1 = AssignmentMetadata.now(currentUser, "Viewer role");
             assignmentManager.add(new PermanentAssignment(user1, viewerRole, meta1));
 

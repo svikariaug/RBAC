@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RoleManagerTest {
 
     private RoleManager manager;
-    private AssignmentManager assignmentManager; // заглушка
+    private AssignmentManager assignmentManager; 
 
     @BeforeEach
     void setUp() {

@@ -50,15 +50,15 @@ public class CommandParser {
         String commandName = parts[0].toLowerCase();
 
         if (parts.length > 1) {
-            // Если есть аргументы, создаём новый Scanner из них
+            
             Scanner commandScanner = new Scanner(parts[1]);
             executeCommand(commandName, commandScanner, system);
         } else {
-            // Если аргументов нет, но scanner не null, передаём его
+            
             if (scanner != null) {
                 executeCommand(commandName, scanner, system);
             } else {
-                // Если scanner null, создаём пустой
+                
                 executeCommand(commandName, new Scanner(""), system);
             }
         }

@@ -13,7 +13,7 @@ public class Role {
         this("role_" + UUID.randomUUID().toString(), name, description);
     }
 
-    /** Восстановление из файла-снимка с сохранением идентификатора. */
+    
     public static Role restoreFromSnapshot(String id, String name, String description) {
         return new Role(id, name, description);
     }

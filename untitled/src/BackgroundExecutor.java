@@ -5,9 +5,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Пул потоков для фоновых задач RBAC (отчёты, сохранение).
- */
+
 public final class BackgroundExecutor implements AutoCloseable {
 
     private final ExecutorService executor;

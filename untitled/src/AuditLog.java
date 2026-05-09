@@ -159,9 +159,9 @@ public class AuditLog {
                 entries.add(e);
                 processed.incrementAndGet();
             } catch (InterruptedException ignored) {
-                // ignore
+                
             } catch (Throwable ignored) {
-                // keep worker alive
+                
             }
         }
     }

@@ -1,6 +1,4 @@
-/**
- * Выводится по {@code java Main --user-validation} (старый сценарь проверки {@link User}).
- */
+
 final class UserValidationSmoke {
 
     private UserValidationSmoke() {}

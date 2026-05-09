@@ -1,8 +1,4 @@
-/**
- * Точка входа: консольная утилита RBAC.
- * <p>
- * Запуск демонстрации валидации {@link User}: {@code java Main --user-validation}
- */
+
 public class Main {
 
     public static void main(String[] args) {

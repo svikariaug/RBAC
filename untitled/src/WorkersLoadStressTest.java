@@ -16,9 +16,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Небольшой нагрузочный сценарий: параллельное создание пользователей, назначение роли, фильтры/поиски.
- */
+
 class WorkersLoadStressTest {
 
     private RBACSystem system;
@@ -70,7 +68,7 @@ class WorkersLoadStressTest {
                         am.add(new PermanentAssignment(u, viewer,
                                 AssignmentMetadata.now(actor, "stress")));
                     } catch (IllegalArgumentException ignored) {
-                        // возможные гонки допустимости API — не считаем падением теста
+                        
                     }
 
                     um.findByFilter(UserFilters.byUsernameContains("load_t"));

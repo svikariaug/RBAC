@@ -8,9 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Текстовый снимок RBAC v1: экспорт/импорт (save/load).
- */
+
 public final class RbacSnapshotIO {
 
     static final String HEADER = "RBAC-SNAPSHOT-v1";
@@ -76,7 +74,7 @@ public final class RbacSnapshotIO {
         }
     }
 
-    /** Загружает снимок: очищает систему и восстанавливает данные в порядке users → roles → assignments. */
+    
     public static void importFromFile(RBACSystem system, String filename) throws IOException {
         ValidationUtils.requireNonEmpty(filename, "filename");
         Path path = Path.of(filename);
@@ -118,7 +116,7 @@ public final class RbacSnapshotIO {
                     }
                 }
                 default -> {
-                    // игнор неизвестных записей
+                    
                 }
             }
         }

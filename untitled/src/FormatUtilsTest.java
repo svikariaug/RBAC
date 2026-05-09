@@ -10,8 +10,8 @@ class FormatUtilsTest {
         String t = FormatUtils.formatTable(
                 new String[]{"A", "B"},
                 List.of(
-                        new String[]{"1", "2"},  // первая строка
-                        new String[]{"3", "4"}   // вторая строка и т.д.
+                        new String[]{"1", "2"},  
+                        new String[]{"3", "4"}   
                 )
         );
         assertTrue(t.contains("+"));

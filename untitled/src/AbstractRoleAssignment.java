@@ -10,9 +10,7 @@ public abstract class AbstractRoleAssignment implements RoleAssignment {
         this(user, role, metadata, null);
     }
 
-    /**
-     * @param fixedAssignmentId если не {@code null} и не пусто — используется при загрузке снимка
-     */
+    
     protected AbstractRoleAssignment(User user, Role role, AssignmentMetadata metadata, String fixedAssignmentId) {
         if (fixedAssignmentId != null && !fixedAssignmentId.isBlank()) {
             this.assignmentId = fixedAssignmentId.trim();

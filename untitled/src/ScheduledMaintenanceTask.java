@@ -4,9 +4,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Периодическое обслуживание: истёкшие временные назначения и отчёт статистики в audit log.
- */
+
 public final class ScheduledMaintenanceTask implements AutoCloseable {
 
     private final ScheduledExecutorService scheduler;
@@ -19,9 +17,7 @@ public final class ScheduledMaintenanceTask implements AutoCloseable {
         this.scheduler.scheduleAtFixedRate(this::safeTick, 0, period, unit);
     }
 
-    /**
-     * Один цикл обслуживания (удобно для тестов без планировщика).
-     */
+    
     public static void runMaintenanceTick(RBACSystem system) {
         int closed = system.getAssignmentManager().finalizeExpiredTemporaryAssignments();
         String compact = compactStats(system);

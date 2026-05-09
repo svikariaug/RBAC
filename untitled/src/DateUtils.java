@@ -32,9 +32,7 @@ public final class DateUtils {
         return normalizeComparable(date1).compareTo(normalizeComparable(date2)) > 0;
     }
 
-    /**
-     * Adds days for "YYYY-MM-DD". For "YYYY-MM-DD HH:MM" keeps the time part.
-     */
+    
     public static String addDays(String date, int days) {
         ValidationUtils.requireNonEmpty(date, "date");
         String d = date.trim();
@@ -54,9 +52,7 @@ public final class DateUtils {
         throw new IllegalArgumentException("Invalid date format: " + date);
     }
 
-    /**
-     * Produces a human-friendly relative time for a date/datetime in supported formats.
-     */
+    
     public static String formatRelativeTime(String date) {
         ValidationUtils.requireNonEmpty(date, "date");
         String d = date.trim();
@@ -102,13 +98,13 @@ public final class DateUtils {
 
     private static String normalizeComparable(String date) {
         String d = date.trim();
-        if (d.length() == 10) { // YYYY-MM-DD
+        if (d.length() == 10) { 
             return d;
         }
-        if (d.length() == 16) { // YYYY-MM-DD HH:MM
+        if (d.length() == 16) { 
             return d;
         }
-        if (d.length() == 19) { // YYYY-MM-DD HH:MM:SS
+        if (d.length() == 19) { 
             return d;
         }
         throw new IllegalArgumentException("Invalid date format: " + date);
