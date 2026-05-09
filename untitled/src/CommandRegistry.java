@@ -680,6 +680,11 @@ public class CommandRegistry {
             parser.printHelp();
         });
 
+        parser.registerCommand("scheduler-tick", "запустить один цикл планировщика (истечение временных ролей + лог)", (scanner, system) -> {
+            ScheduledMaintenanceTask.runMaintenanceTick(system);
+            System.out.println("Цикл планировщика выполнен; запись SCHEDULER_TICK добавлена в audit log.");
+        });
+
         parser.registerCommand("stats", "статистика системы", (scanner, system) -> {
             System.out.print(system.generateStatistics());
 

@@ -3,15 +3,25 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RBACSystem {
+    private static final int DEFAULT_SCHEDULER_PERIOD_SEC = 60;
+
     private final UserManager userManager;
     private final RoleManager roleManager;
     private final AssignmentManager assignmentManager;
     private final AuditLog auditLog;
     private final BackgroundExecutor backgroundExecutor;
+    private final ScheduledMaintenanceTask scheduledMaintenance;
     private final AtomicBoolean asyncShutdown = new AtomicBoolean(false);
     private String currentUser;
 
     public RBACSystem() {
+        this(DEFAULT_SCHEDULER_PERIOD_SEC);
+    }
+
+    /**
+     * @param schedulerPeriodSeconds период тика планировщика в секундах; {@code 0} — без фонового расписания (например, для тестов)
+     */
+    public RBACSystem(int schedulerPeriodSeconds) {
         this.userManager = new UserManager();
         this.roleManager = new RoleManager();
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
@@ -19,6 +29,11 @@ public class RBACSystem {
         this.auditLog = new AuditLog();
         this.backgroundExecutor = new BackgroundExecutor();
         this.currentUser = "system";
+        if (schedulerPeriodSeconds > 0) {
+            this.scheduledMaintenance = new ScheduledMaintenanceTask(this, schedulerPeriodSeconds, TimeUnit.SECONDS);
+        } else {
+            this.scheduledMaintenance = null;
+        }
     }
 
     public RBACSystem(String currentUser) {
@@ -35,12 +50,19 @@ public class RBACSystem {
         return backgroundExecutor;
     }
 
+    public ScheduledMaintenanceTask getScheduledMaintenance() {
+        return scheduledMaintenance;
+    }
+
     /**
      * Завершение фоновых потоков (пул задач и обработчик audit log).
      */
     public void shutdownAsyncServices() {
         if (!asyncShutdown.compareAndSet(false, true)) {
             return;
+        }
+        if (scheduledMaintenance != null) {
+            scheduledMaintenance.shutdown();
         }
         backgroundExecutor.shutdown();
         auditLog.shutdownAndAwait(5, TimeUnit.SECONDS);

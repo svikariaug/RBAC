@@ -76,4 +76,19 @@ class AssignmentManagerTest {
         assertTrue(perms.stream().anyMatch(p -> p.name().equals("READ")));
         assertTrue(perms.stream().anyMatch(p -> p.name().equals("WRITE")));
     }
+
+    @Test
+    void finalizeExpiredTemporaryAssignments_countsOnlyDue() {
+        User u = User.create("due", "Due", "due@ex.com");
+        Role r = new Role("RT", "Role T");
+        userManager.add(u);
+        roleManager.add(r);
+
+        AssignmentMetadata meta = AssignmentMetadata.now("admin", "x");
+        TemporaryAssignment past = new TemporaryAssignment(u, r, meta, "2000-06-01 00:00", false);
+        manager.add(past);
+
+        assertEquals(1, manager.finalizeExpiredTemporaryAssignments());
+        assertEquals(0, manager.finalizeExpiredTemporaryAssignments());
+    }
 }

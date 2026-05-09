@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 public class TemporaryAssignment extends AbstractRoleAssignment {
     String expiresAt;
     private boolean autoRenew;
+    private volatile boolean finalizedByScheduler;
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
         super(user, role, metadata);
@@ -26,12 +27,13 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         return "TEMPORARY";
     }
 
-    public void extend(String newExpirationDate) {
+    public synchronized void extend(String newExpirationDate) {
         newExpirationDate = ValidationUtils.normalizeString(newExpirationDate);
         if (newExpirationDate == null || !newExpirationDate.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$")) {
             throw new IllegalArgumentException("expiresAt must be in format YYYY-MM-DD HH:MM");
         }
         this.expiresAt = newExpirationDate;
+        finalizedByScheduler = false;
     }
 
     public String getExpiresAt() {
@@ -40,6 +42,21 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
 
     public boolean isAutoRenew() {
         return autoRenew;
+    }
+
+    /**
+     * Планировщик: короткая критическая секция на объекте; однократно закрепляет истечение срока.
+     */
+    public synchronized boolean finalizeExpirationIfDue() {
+        if (finalizedByScheduler) {
+            return false;
+        }
+        if (!isExpired()) {
+            return false;
+        }
+        finalizedByScheduler = true;
+        expiresAt = "2000-01-01 00:00";
+        return true;
     }
 
     public boolean isExpired() {

@@ -120,4 +120,19 @@ public class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Assignment is not temporary: " + assignmentId);
         }
     }
+
+    /**
+     * Находит истёкшие временные назначения и маркирует их (короткие блокировки на объектных замках назначений).
+     *
+     * @return число записей, обработанных на этом проходе впервые
+     */
+    public int finalizeExpiredTemporaryAssignments() {
+        int n = 0;
+        for (RoleAssignment ra : findAll()) {
+            if (ra instanceof TemporaryAssignment ta && ta.finalizeExpirationIfDue()) {
+                n++;
+            }
+        }
+        return n;
+    }
 }
