@@ -11,7 +11,11 @@ public class Role {
 
     public Role(String name, String description) {
         this.id = "role_" + UUID.randomUUID().toString();
-        this.name = name;
+        name = ValidationUtils.normalizeString(name);
+        description = ValidationUtils.normalizeString(description);
+        ValidationUtils.requireNonEmpty(name, "Role name");
+        ValidationUtils.requireNonEmpty(description, "Role description");
+        this.name = name.toUpperCase();
         this.description = description;
     }
 
@@ -73,6 +77,6 @@ public class Role {
 
     @Override
     public String toString() {
-        return "Role{id='" + id + "', name='" + name + "', description='" + description + "', permissions=" + permissions + "}";
+        return name + " - " + description;
     }
 }

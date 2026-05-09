@@ -17,7 +17,9 @@ public class AssignmentFilters {
     }
 
     public static AssignmentFilter byRoleName(String roleName) {
-        return assignment -> assignment.role().getName().equals(roleName);
+        if (roleName == null) return assignment -> false;
+        String key = roleName.trim().toUpperCase();
+        return assignment -> assignment.role().getName().equalsIgnoreCase(key);
     }
 
     public static AssignmentFilter activeOnly() {

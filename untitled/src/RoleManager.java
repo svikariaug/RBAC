@@ -13,11 +13,12 @@ public class RoleManager implements Repository<Role> {
 
     @Override
     public void add(Role role) {
-        if (rolesByName.containsKey(role.getName())) {
+        String key = role.getName().toUpperCase();
+        if (rolesByName.containsKey(key)) {
             throw new IllegalArgumentException("Role with name " + role.getName() + " already exists");
         }
         rolesById.put(role.getId(), role);
-        rolesByName.put(role.getName(), role);
+        rolesByName.put(key, role);
     }
 
     @Override
@@ -26,7 +27,7 @@ public class RoleManager implements Repository<Role> {
             throw new IllegalStateException("Cannot remove role " + role.getName() + " as it is assigned to users");
         }
         rolesById.remove(role.getId());
-        rolesByName.remove(role.getName());
+        rolesByName.remove(role.getName().toUpperCase());
         return true;
     }
 
@@ -52,7 +53,8 @@ public class RoleManager implements Repository<Role> {
     }
 
     public Optional<Role> findByName(String name) {
-        return Optional.ofNullable(rolesByName.get(name));
+        if (name == null) return Optional.empty();
+        return Optional.ofNullable(rolesByName.get(name.trim().toUpperCase()));
     }
 
     public List<Role> findByFilter(RoleFilter filter) {
@@ -69,7 +71,8 @@ public class RoleManager implements Repository<Role> {
     }
 
     public boolean exists(String name) {
-        return rolesByName.containsKey(name);
+        if (name == null) return false;
+        return rolesByName.containsKey(name.trim().toUpperCase());
     }
 
     public void addPermissionToRole(String roleName, Permission permission) {

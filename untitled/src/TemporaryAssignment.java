@@ -8,6 +8,10 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata metadata, String expiresAt, boolean autoRenew) {
         super(user, role, metadata);
+        expiresAt = ValidationUtils.normalizeString(expiresAt);
+        if (expiresAt == null || !expiresAt.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$")) {
+            throw new IllegalArgumentException("expiresAt must be in format YYYY-MM-DD HH:MM");
+        }
         this.expiresAt = expiresAt;
         this.autoRenew = autoRenew;
     }
@@ -23,13 +27,17 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
     }
 
     public void extend(String newExpirationDate) {
+        newExpirationDate = ValidationUtils.normalizeString(newExpirationDate);
+        if (newExpirationDate == null || !newExpirationDate.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$")) {
+            throw new IllegalArgumentException("expiresAt must be in format YYYY-MM-DD HH:MM");
+        }
         this.expiresAt = newExpirationDate;
     }
 
     public boolean isExpired() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        LocalDateTime expiration = LocalDateTime.parse(expiresAt, formatter);
-        return LocalDateTime.now().isAfter(expiration);
+        String now = LocalDateTime.now().format(formatter);
+        return DateUtils.isAfter(now, expiresAt);
     }
 
     public String getTimeRemaining() {
