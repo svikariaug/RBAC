@@ -1,0 +1,26 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/taxi}
+    username: ${SPRING_DATASOURCE_USERNAME:taxi}
+    password: ${SPRING_DATASOURCE_PASSWORD:taxi}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  rabbitmq:
+    host: ${TAXI_RABBIT_HOST:localhost}
+    port: 5672
+    username: guest
+    password: guest
+
+taxi:
+  jwt:
+    secret: ${TAXI_JWT_SECRET:taxi-dev-secret-key-min-32-chars-long!!!!}
+  notification:
+    workers: ${TAXI_NOTIFICATION_WORKERS:4}
+    send-delay-ms: 300
