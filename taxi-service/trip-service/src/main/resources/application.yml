@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: trip-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/taxi}
+    username: ${SPRING_DATASOURCE_USERNAME:taxi}
+    password: ${SPRING_DATASOURCE_PASSWORD:taxi}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  rabbitmq:
+    host: ${TAXI_RABBIT_HOST:localhost}
+    port: 5672
+    username: guest
+    password: guest
+
+taxi:
+  jwt:
+    secret: ${TAXI_JWT_SECRET:taxi-dev-secret-key-min-32-chars-long!!!!}
+  user-service:
+    base-url: ${TAXI_USER_SERVICE_BASE_URL:http://localhost:8081}
+  trip:
+    tariff-per-km: 50
